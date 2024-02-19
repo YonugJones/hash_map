@@ -3,6 +3,8 @@ export class HashMap {
         this.initialCapacity = initialCapacity;
         this.loadFactor = loadFactor;
         this.array = Array(this.initialCapacity);
+        this.capacity = initialCapacity;
+        this.size = 0;
     }
 
     hash(key) {
@@ -11,11 +13,12 @@ export class HashMap {
         for (let i = 0; i < key.length; i++) {
             hashCode = primeNumber * hashCode + key.charCodeAt(i);
         }
-        return hashCode % this.array.length;
+        return hashCode % this.capacity;
     }
 
     set(key, value) {
         const index = this.hash(key);
+        console.log(index);
         let bucket = this.array[index];
         if (!bucket) {
             bucket = [];
@@ -28,6 +31,33 @@ export class HashMap {
             }
         }
         bucket.push([key, value]);
+        this.size++;
+        if (this.size / this.array.length >= this.loadFactor) {
+            this.rehash();
+        }
+    }
+
+    rehash() {
+        const newCapacity = this.array.length * 2;
+        const newArray = Array(newCapacity);
+        this.capacity = newCapacity;
+        this.size = 0;
+
+        for (let i = 0; i < this.array.length; i++) {
+            const bucket = this.array[i];
+            if (bucket) {
+                for (let j = 0; j < bucket.length; j++) {
+                    const [key, value] = bucket[j];
+                    const newIndex = this.hash(key) % newCapacity; 
+                    if (!newArray[newIndex]) {
+                        newArray[newIndex] = [];
+                    }
+                    newArray[newIndex].push([key, value]);
+                    this.size++;
+                }
+            }
+        }
+        this.array = newArray;
     }
 
     get(key) {
